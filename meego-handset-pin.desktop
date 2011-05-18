@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Pin / Puk management
+Exec=pinpuk
+Terminal=false
+Icon=sim_32x32
