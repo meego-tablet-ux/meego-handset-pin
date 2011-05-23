@@ -29,7 +29,8 @@ SOURCES += \
 	*.cpp
 
 HEADERS += \
-	*.h 
+	*.h \ 
+    pinapplication.h
 
 OTHER_FILES += \
 	interfaces/*.xml
@@ -62,4 +63,3 @@ dist.commands += tar jcpf $${PROJECT_NAME}-$${VERSION}.tar.bz2 $${PROJECT_NAME}-
 dist.commands += rm -fR $${PROJECT_NAME}-$${VERSION} &&
 dist.commands += echo; echo Created $${PROJECT_NAME}-$${VERSION}.tar.bz2
 QMAKE_EXTRA_TARGETS += dist
-

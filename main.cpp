@@ -22,10 +22,13 @@
 /* oFono DBus types */
 #include "ofonodbustypes.h"
 
+/* PinApplication */
+#include "pinapplication.h"
+
 int main(int argc, char *argv[])
 {
     int mainErr = -1;
-    QApplication a(argc, argv);
+    PinApplication a(argc, argv);
 
     // Register meta types defined in ofonodbustypes.h"
     registerOfonoDbusTypes();
