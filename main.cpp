@@ -54,6 +54,9 @@ int main(int argc, char *argv[])
     // use just the first element of SimManager interfaces list
     SimIf *firstSimIf = simIfs.first();
 
+    // register app to track changes on "PinRequired" property
+    a.registerPinPropertyChanged(firstSimIf);
+
     // Run SimToolkit application
     mainErr = a.exec();
 
