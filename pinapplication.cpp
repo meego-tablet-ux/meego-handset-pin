@@ -10,6 +10,15 @@
 
 #include "pinapplication.h"
 
+#include "simdialog.h"
+#include "siminputtext.h"
+#include "simwidget.h"
+#include "simdefines.h"
+
+
+#include "sim_32x32.xpm"
+
+
 PinApplication::PinApplication(int &argc, char **argv, int version) :
     QApplication(argc, argv, version)
 {
@@ -27,6 +36,9 @@ PinApplication::~PinApplication()
 bool PinApplication::registerPinPropertyChanged(SimIf *simIf)
 {
     mSimIf = simIf;
+    if (mSimProperties != NULL)
+        delete mSimProperties;
+    mSimProperties = new SimOfonoProperties(mSimIf);
     // Connect simIf signals
     return connect(mSimIf, SIGNAL(PropertyChanged(QString, QDBusVariant)), this, SLOT(simPropertyChanged(QString, QDBusVariant)));
 }
@@ -34,5 +46,23 @@ bool PinApplication::registerPinPropertyChanged(SimIf *simIf)
 void PinApplication::simPropertyChanged(const QString &property, const QDBusVariant &value)
 {
     qDebug() << "simPropertyChanged: " << property;
+    if (property != "PinRequired")
+        return;
+    if (mSimProperties != NULL)
+        delete mSimProperties;
+    mSimProperties = new SimOfonoProperties(mSimIf);
+    SimDialog dlg(new SimInputText(sim_32x32_xpm, value.variant().toString()));
+    dlg.exec();
+    AgentResponse ret = dlg.getAgentResponse();
+    switch (ret) {
+    case Ok:
+        qDebug() << "EnterPin: " << value.variant().toString() << " : " << dlg.getResponseData().toString();
+        mSimIf->EnterPin(value.variant().toString(), dlg.getResponseData().toString());
+        break;
+    case Cancel:
+        break;
+    default:
+        Q_ASSERT(false);
+    }
 }
 
