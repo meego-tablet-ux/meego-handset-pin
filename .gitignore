@@ -1,0 +1,12 @@
+*~
+Makefile
+pinpuk
+mgrif.cpp
+mgrif.h
+simif.cpp
+simif.h
+*.o
+moc_*.cpp
+*.pro.user
+*.tar.bz2
+
