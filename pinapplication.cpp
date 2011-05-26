@@ -24,6 +24,7 @@ PinApplication::PinApplication(int &argc, char **argv, int version) :
 {
     mSimIf = NULL;
     mSimProperties = NULL;
+    setQuitOnLastWindowClosed ( false );
 }
 
 PinApplication::~PinApplication()
@@ -51,6 +52,8 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
     if (mSimProperties != NULL)
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);
+    if (value.variant().toString() == "none")
+        return;
     SimDialog dlg(new SimInputText(sim_32x32_xpm, value.variant().toString()));
     dlg.exec();
     AgentResponse ret = dlg.getAgentResponse();
@@ -65,4 +68,3 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
         Q_ASSERT(false);
     }
 }
-
