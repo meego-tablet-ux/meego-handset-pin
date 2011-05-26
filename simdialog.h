@@ -16,15 +16,15 @@
 #include <QtGui/QDialog>
 #include <QtCore/QString>
 #include <QtCore/QVariant>
+#include <QtDeclarative/QDeclarativeView>
 
-#include "simwidget.h"
 #include "simdefines.h"
 
 class SimDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit SimDialog(SimWidget * simWidget, QWidget *parent = 0);
+    explicit SimDialog(const QString &title, const QString &qmlViewUrl, QWidget *parent = 0);
 
     inline AgentResponse getAgentResponse()
     {
@@ -36,11 +36,45 @@ public:
         return responseData;
     }
 
+    inline void setDefaultText(const QString &defaultText)
+    {
+        mDefaultText = defaultText;
+    }
+
+    inline void setNumeric(const bool numeric)
+    {
+        mNumeric = numeric;
+    }
+
+    inline void setHideTyping(const bool hideTyping)
+    {
+        mHideTyping = hideTyping;
+    }
+
+    inline void setCharBounds(const int minChars, const int maxChars)
+    {
+        mMinChars = minChars;
+        mMaxChars = maxChars;
+    }
 
 private:
     AgentResponse agentResponse;
     QVariant responseData;
-    SimWidget * mSimWidget;
+    // QML view specifics, inline setters
+    // for "editText" items
+    QString mDefaultText;
+    bool mNumeric;
+    bool mHideTyping;
+    int mMinChars;
+    int mMaxChars;
+    // QML view support
+    QDeclarativeView *mView;
+    // constructor parameters
+    QString mTitle;
+    QString mQmlViewUrl;
+
+public:
+    void initView();
 
 public slots:
     inline void responseOkWithText(QString text)

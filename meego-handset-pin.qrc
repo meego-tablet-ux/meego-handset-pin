@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>SimUiCheck.js</file>
+        <file>SimPassword.qml</file>
+        <file>sim_32x32.xpm</file>
+    </qresource>
+</RCC>

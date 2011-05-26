@@ -29,11 +29,15 @@ SOURCES += \
 	*.cpp
 
 HEADERS += \
-	*.h \ 
-    pinapplication.h
+	*.h 
 
 OTHER_FILES += \
+	*.js \
+	*.qml \
 	interfaces/*.xml
+
+RESOURCES += \
+	*.qrc
 
 
 # ---- Installation
@@ -63,3 +67,4 @@ dist.commands += tar jcpf $${PROJECT_NAME}-$${VERSION}.tar.bz2 $${PROJECT_NAME}-
 dist.commands += rm -fR $${PROJECT_NAME}-$${VERSION} &&
 dist.commands += echo; echo Created $${PROJECT_NAME}-$${VERSION}.tar.bz2
 QMAKE_EXTRA_TARGETS += dist
+

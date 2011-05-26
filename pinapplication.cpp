@@ -11,8 +11,6 @@
 #include "pinapplication.h"
 
 #include "simdialog.h"
-#include "siminputtext.h"
-#include "simwidget.h"
 #include "simdefines.h"
 
 
@@ -51,7 +49,8 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
     if (mSimProperties != NULL)
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);
-    SimDialog dlg(new SimInputText(sim_32x32_xpm, value.variant().toString()));
+    SimDialog dlg(value.variant().toString(), "qrc:/SimPassword.qml");
+    dlg.initView();
     dlg.exec();
     AgentResponse ret = dlg.getAgentResponse();
     switch (ret) {
