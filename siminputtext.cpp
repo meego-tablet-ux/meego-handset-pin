@@ -35,6 +35,9 @@ SimInputText::SimInputText(const QPixmap & pixmap, const QString & text, QWidget
     mText = new QLabel(text, this);
     // input text edit
     mEditText = new QLineEdit(this);
+    mEditText->setEchoMode(mHideTyping ? QLineEdit::PasswordEchoOnEdit : QLineEdit::Normal);
+    if (mMaxChars != -1)
+        mEditText->setMaxLength(mMaxChars);
     // ok button box
     mOkBox = new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel,Qt::Horizontal,this);
 
