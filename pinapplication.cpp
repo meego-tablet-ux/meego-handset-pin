@@ -22,6 +22,7 @@ PinApplication::PinApplication(int &argc, char **argv, int version) :
 {
     mSimIf = NULL;
     mSimProperties = NULL;
+    setQuitOnLastWindowClosed ( false );
 }
 
 PinApplication::~PinApplication()
@@ -43,20 +44,29 @@ bool PinApplication::registerPinPropertyChanged(SimIf *simIf)
 
 void PinApplication::simPropertyChanged(const QString &property, const QDBusVariant &value)
 {
-    qDebug() << "simPropertyChanged: " << property;
+    qDebug() << "simPropertyChanged: " << property << " variant string : " << value.variant().toString();
     if (property != "PinRequired")
         return;
     if (mSimProperties != NULL)
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);
+    if (value.variant().toString() == "none")
+        return;
     SimDialog dlg(value.variant().toString(), "qrc:/SimPassword.qml");
     dlg.initView();
     dlg.exec();
+    QDBusPendingReply<> enterPinCall;
     AgentResponse ret = dlg.getAgentResponse();
     switch (ret) {
     case Ok:
         qDebug() << "EnterPin: " << value.variant().toString() << " : " << dlg.getResponseData().toString();
-        mSimIf->EnterPin(value.variant().toString(), dlg.getResponseData().toString());
+        enterPinCall = mSimIf->EnterPin(value.variant().toString(), dlg.getResponseData().toString());
+        enterPinCall.waitForFinished();
+        if (enterPinCall.isError())
+        {
+            QDBusError dbusError = enterPinCall.error();
+            qDebug() << "Bad Pin Code!";
+        }
         break;
     case Cancel:
         break;
@@ -64,4 +74,3 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
         Q_ASSERT(false);
     }
 }
-

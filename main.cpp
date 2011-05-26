@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
 
     // Run SimToolkit application
     mainErr = a.exec();
+    qDebug() << "Exit : " << mainErr;
 
     // delete all org.ofono.SimManager interfaces
     while (!simIfs.isEmpty()) {
