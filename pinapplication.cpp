@@ -46,7 +46,9 @@ bool PinApplication::registerPinPropertyChanged(SimIf *simIf)
 
 void PinApplication::simPropertyChanged(const QString &property, const QDBusVariant &value)
 {
-    qDebug() << "simPropertyChanged: " << property;
+    QDBusPendingReply<> enterPinCall;
+
+    qDebug() << "simPropertyChanged: " << property << " variant string : " << value.variant().toString();
     if (property != "PinRequired")
         return;
     if (mSimProperties != NULL)
@@ -59,8 +61,15 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
     AgentResponse ret = dlg.getAgentResponse();
     switch (ret) {
     case Ok:
+
         qDebug() << "EnterPin: " << value.variant().toString() << " : " << dlg.getResponseData().toString();
-        mSimIf->EnterPin(value.variant().toString(), dlg.getResponseData().toString());
+        enterPinCall = mSimIf->EnterPin(value.variant().toString(), dlg.getResponseData().toString());
+        enterPinCall.waitForFinished();
+        if (enterPinCall.isError())
+        {
+            QDBusError dbusError = enterPinCall.error();
+            qDebug() << "Bad Pin Code!";
+        }
         break;
     case Cancel:
         break;
