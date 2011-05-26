@@ -86,8 +86,6 @@ Rectangle {
         anchors.right: parent.right
         anchors.rightMargin: 10
         wrapMode: Text.WordWrap
-        color: theme.dialogTitleFontColor
-        font.pixelSize: theme.dialogTitleFontPixelSize
     }
 
     Image {
