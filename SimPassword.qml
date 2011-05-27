@@ -41,6 +41,7 @@
 */
 
 import Qt 4.7
+import MeeGo.Components 0.1
 import "qrc:/SimUiCheck.js" as SimUiCheck
 
 Rectangle {
@@ -48,24 +49,29 @@ Rectangle {
     objectName: "view"
     width: 480
     height: 320
-    color: "#20400080"
+
+    Theme { id: theme }
+    color: theme.dialogBackgroundColor
 
     signal accepted()
     onAccepted: {
         console.log("Accepted");
         console.log("Text len: ", editText.text.length, ", bounds: [", editText.minChars, "..", editText.maxChars, "], numeric: ", editText.isNumeric);
         if (editText.minChars != -1 && editText.text.length < editText.minChars) {
-            console.log( qsTr("You entered ") + editText.text.length + qsTr(" characters.") + "\n" +
-            qsTr("Please enter at least ") + editText.minChars + qsTr(" characters."));
+            formatMsgBox.text = qsTr("You entered ") + editText.text.length + qsTr(" characters.") + "\n" +
+            qsTr("Please enter at least ") + editText.minChars + qsTr(" characters.");
+            formatMsgBox.show();
             return;
         }
         if (editText.maxChars != -1 && editText.text.length > editText.maxChars) {
-            console.log( qsTr("You entered ") + editText.text.length + qsTr(" characters.") + "\n" +
-            qsTr("Please enter no more than ") + editText.maxChars + qsTr(" characters."));
+            formatMsgBox.text = qsTr("You entered ") + editText.text.length + qsTr(" characters.") + "\n" +
+            qsTr("Please enter no more than ") + editText.maxChars + qsTr(" characters.");
+            formatMsgBox.show();
             return;
         }
         if (editText.isNumeric && !SimUiCheck.checkNumericString(editText.text)) {
-            console.log( qsTr("Please enter numbers only"));
+            formatMsgBox.text = qsTr("Please enter numbers only");
+            formatMsgBox.show();
             return;
         }
         view.textEntered(editText.text)
@@ -75,7 +81,7 @@ Rectangle {
     signal textEntered(string text)
     onTextEntered: console.log("Text entered: " + text)
 
-    Text {
+    Label {
         id: title
         objectName: "title"
         text: "Enter code"
@@ -86,6 +92,8 @@ Rectangle {
         anchors.right: parent.right
         anchors.rightMargin: 10
         wrapMode: Text.WordWrap
+        color: theme.dialogTitleFontColor
+        font.pixelSize: theme.dialogTitleFontPixelSize
     }
 
     Image {
@@ -100,73 +108,61 @@ Rectangle {
         anchors.leftMargin: 10
     }
 
-    Rectangle {
-        id: editRect
-        objectName: "editRect"
-        color: "#20408000"
-        height: 30
+    TextEntry {
+        id: editText
+        objectName: "editText"
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: icon.right
         anchors.leftMargin: 10
         anchors.right: parent.right
         anchors.rightMargin: 10
-        TextInput {
-            id: editText
-            objectName: "editText"
-            anchors.fill: parent
-            horizontalAlignment: TextInput.AlignHCenter
-            echoMode: TextInput.Password
-            property bool isNumeric: true
-            property bool hideTyping: true
-            property int minChars: 4
-            property int maxChars: 4
-        }
+        textInput.horizontalAlignment: TextInput.AlignHCenter
+        textInput.focus: true
+        textInput.echoMode: TextInput.Password
+        property bool isNumeric: true
+        property bool hideTyping: true
+        property int minChars: 4
+        property int maxChars: 4
     }
 
-    Rectangle {
+    Button {
         id: okRect
         objectName: "okRect"
         width: 80
         height: 30
-        color: "#20408000"
         anchors.horizontalCenterOffset: -50
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 10
-        Text {
-            id: okText
-            text: qsTr( "Ok" )
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            anchors.fill: parent
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: view.accepted()
+        text: qsTr( "Ok" )
+        onClicked: {
+            view.accepted()
         }
     }
 
-    Rectangle {
+    Button {
         id: cancelRect
         objectName: "cancelRect"
         width: 80
         height: 30
-        color: "#20408000"
         anchors.horizontalCenterOffset: 50
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 10
-        Text {
-            id: cancelText
-            text: qsTr( "Cancel" )
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            anchors.fill: parent
+        text: qsTr( "Cancel" )
+        onClicked: {
+            view.rejected()
         }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: view.rejected()
-        }
+    }
+
+    ModalMessageBox {
+        id: formatMsgBox
+        title: qsTr("Attention")
+        text: ""
+        showAcceptButton: true
+        showCancelButton: false
+        fogClickable: false
+        acceptButtonText: qsTr( "Ok")
     }
 
 }
