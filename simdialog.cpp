@@ -17,8 +17,8 @@ SimDialog::SimDialog(const QString &title, const QString &qmlViewUrl, QWidget *p
 {
     mTitle = title;
     mQmlViewUrl = qmlViewUrl;
-    mMinChars = mMaxChars = 4;
-    mHideTyping = mNumeric = true;
+    mMinChars = mMaxChars = -1;
+    mHideTyping = mNumeric = false;
 }
 
 void SimDialog::initView()

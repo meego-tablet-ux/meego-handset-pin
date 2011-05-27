@@ -28,10 +28,10 @@
     - \b editText : Multiple char input.
       - Properties
         - text
-        - isNumeric: true
+        - isNumeric: false
         - hideTyping: true
-        - minChars: 4
-        - maxChars: 4
+        - minChars: -1
+        - maxChars: -1
     - \b okRect : "Ok" button.
       - Signals
         - accepted()
@@ -119,10 +119,10 @@ Rectangle {
         textInput.horizontalAlignment: TextInput.AlignHCenter
         textInput.focus: true
         textInput.echoMode: TextInput.Password
-        property bool isNumeric: true
+        property bool isNumeric: false
         property bool hideTyping: true
-        property int minChars: 4
-        property int maxChars: 4
+        property int minChars: -1
+        property int maxChars: -1
     }
 
     Button {

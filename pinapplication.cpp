@@ -53,6 +53,7 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
     if (value.variant().toString() == "none")
         return;
     SimDialog dlg(value.variant().toString(), "qrc:/SimPassword.qml");
+    dlg.setHideTyping(true);
     dlg.initView();
     dlg.exec();
     QDBusPendingReply<> enterPinCall;
