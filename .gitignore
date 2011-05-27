@@ -7,6 +7,7 @@ simif.cpp
 simif.h
 *.o
 moc_*.cpp
+qrc_*.cpp
 *.pro.user
 *.tar.bz2
 
