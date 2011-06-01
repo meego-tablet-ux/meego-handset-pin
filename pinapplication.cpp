@@ -44,34 +44,52 @@ bool PinApplication::registerPinPropertyChanged(SimIf *simIf)
 
 void PinApplication::simPropertyChanged(const QString &property, const QDBusVariant &value)
 {
+    int Retries = 3;
+
     qDebug() << "simPropertyChanged: " << property << " variant string : " << value.variant().toString();
-    if (property != "PinRequired")
-        return;
     if (mSimProperties != NULL)
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);
-    if (value.variant().toString() == "none")
+    if (property == "Retries")
+    {
+        qDebug() << "Retries : " << value.variant().toByteArray();
+    }
+    if (property != "PinRequired" && property != "Retries")
         return;
-    SimDialog dlg(value.variant().toString(), "qrc:/SimPassword.qml");
-    dlg.setHideTyping(true);
-    dlg.initView();
-    dlg.exec();
+    else
+        if (value.variant().toString() == "none")
+            return;
+
     QDBusPendingReply<> enterPinCall;
-    AgentResponse ret = dlg.getAgentResponse();
-    switch (ret) {
-    case Ok:
-        qDebug() << "EnterPin: " << value.variant().toString() << " : " << dlg.getResponseData().toString();
-        enterPinCall = mSimIf->EnterPin(value.variant().toString(), dlg.getResponseData().toString());
-        enterPinCall.waitForFinished();
-        if (enterPinCall.isError())
-        {
-            QDBusError dbusError = enterPinCall.error();
-            qDebug() << "Bad Pin Code!";
+    {
+        // Getting "Retries" property
+        QMap<QString, uchar> simRetryProperty;
+        QString propName = "Retries";
+
+        simRetryProperty = mSimProperties->getRetryProperties();
+        SimDialog dlg(value.variant().toString() + "\n" + QString::number((int)Retries) + " retries", "qrc:/SimPassword.qml");
+
+        dlg.setHideTyping(true);
+        dlg.initView();
+        dlg.exec();
+
+        AgentResponse ret = dlg.getAgentResponse();
+        switch (ret) {
+        case Ok:
+            qDebug() << "EnterPin: " << value.variant().toString() << " : " << dlg.getResponseData().toString();
+            enterPinCall = mSimIf->EnterPin(value.variant().toString(), dlg.getResponseData().toString());
+            enterPinCall.waitForFinished();
+            if (enterPinCall.isError())
+            {
+
+                QDBusError dbusError = enterPinCall.error();
+                qDebug() << "Bad Pin Code! Retries = " << Retries;
+            }
+            break;
+        case Cancel:
+            break;
+        default:
+            Q_ASSERT(false);
         }
-        break;
-    case Cancel:
-        break;
-    default:
-        Q_ASSERT(false);
     }
 }

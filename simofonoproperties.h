@@ -16,13 +16,13 @@
 #include <QVariantMap>
 #include "simif.h"
 
-
 class SimOfonoProperties : public QObject
 {
     Q_OBJECT
 public:
     explicit SimOfonoProperties(SimIf *simIf, QObject *parent = 0);
-
+    QVariant getPropertyValue(QString &propertyName);
+    QMap<QString, uchar> getRetryProperties();
 signals:
 
 private:

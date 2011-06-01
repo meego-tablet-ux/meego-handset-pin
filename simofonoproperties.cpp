@@ -8,8 +8,9 @@
  */
 
 
+ #include <QDBusArgument>
 #include <QtDebug>
-#include <QDBusArgument>
+
 #include "ofonodbustypes.h"
 #include "simofonoproperties.h"
 
@@ -29,5 +30,31 @@ SimOfonoProperties::SimOfonoProperties(SimIf *simIf, QObject *parent) :
     {   // get properties map
         mProperties = simPropsCall.value();
     }
+}
+
+QVariant SimOfonoProperties::getPropertyValue(QString &propertyName)
+{
+      return mProperties.value(propertyName);
+}
+
+QMap<QString, uchar> SimOfonoProperties::getRetryProperties()
+{
+    QMap<QString, uchar> orp;
+
+    QVariant variantRetry;
+    QDBusArgument::ElementType type;
+    QString signature;
+
+    variantRetry = mProperties.value("Retries");
+    QDBusArgument arg = variantRetry.value<QDBusArgument>();
+    signature = arg.currentSignature();
+    type = arg.currentType();
+    qDebug() << "signature:" << signature << " type " << type;
+
+    arg >> orp;
+ //   orp << arg;
+    qDebug() << "orp:" << orp;
+
+    return orp;
 }
 

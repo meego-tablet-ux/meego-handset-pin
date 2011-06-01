@@ -50,6 +50,41 @@ typedef QList<OfonoModem> OfonoModemList;
 Q_DECLARE_METATYPE(OfonoModemList)   /* a(oa{sv}) */
 
 
+typedef uchar OfonoByte;
+Q_DECLARE_METATYPE(OfonoByte)       /* y */
+
+typedef QMap<QString, OfonoByte> OfonoRetryMap;
+Q_DECLARE_METATYPE(OfonoRetryMap)       /* a{sy} */
+
+inline const QDBusArgument &operator>>(const QDBusArgument &arg, OfonoRetryMap &map)
+{
+    arg.beginMap();
+    map.clear();
+    while (!arg.atEnd()) {
+        QString key;
+        OfonoByte value;
+        arg.beginMapEntry();
+        arg >> key >> value;
+        map.insert(key, value);
+        arg.endMapEntry();
+    }
+    arg.endMap();
+    return arg;
+}
+
+inline QDBusArgument &operator<<(QDBusArgument &arg, const OfonoRetryMap &map)
+{
+    arg.beginMap(QVariant::String, qMetaTypeId<OfonoByte>());
+    QList<QString> keys = map.keys();
+    foreach (const QString &key, keys) {
+        arg.beginMapEntry();
+        arg << key << map.value(key);
+        arg.endMapEntry();
+    }
+    arg.endMap();
+    return arg;
+}
+
 
 /* Register all meta types declared above */
 
@@ -57,6 +92,8 @@ inline void registerOfonoDbusTypes()
 {
     qDBusRegisterMetaType<OfonoModem>();
     qDBusRegisterMetaType<OfonoModemList>();
+    qDBusRegisterMetaType<OfonoRetryMap>();
+    qDBusRegisterMetaType<OfonoByte>();
 }
 
 
