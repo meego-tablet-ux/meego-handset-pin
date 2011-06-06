@@ -28,6 +28,8 @@ signals:
 private:
     SimIf *mSimIf;
     SimOfonoProperties *mSimProperties;
+	QString	mPinTypeRequired;
+	int		mPinRetries;
 
 private slots:
     void simPropertyChanged(const QString &property, const QDBusVariant &value);
