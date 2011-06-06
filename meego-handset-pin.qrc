@@ -3,5 +3,7 @@
         <file>SimUiCheck.js</file>
         <file>SimPassword.qml</file>
         <file>sim_32x32.xpm</file>
+        <file>SimButton.qml</file>
+        <file>SimTheming.qml</file>
     </qresource>
 </RCC>

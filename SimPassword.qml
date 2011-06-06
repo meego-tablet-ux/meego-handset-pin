@@ -51,7 +51,8 @@ Rectangle {
     height: 320
 
     Theme { id: theme }
-    color: theme.dialogBackgroundColor
+    SimTheming { id: simTheme }
+    color: simTheme.viewBackgroundColor
 
     signal accepted()
     onAccepted: {
@@ -125,11 +126,9 @@ Rectangle {
         property int maxChars: -1
     }
 
-    Button {
+    SimButton {
         id: okRect
         objectName: "okRect"
-        width: 80
-        height: 30
         anchors.horizontalCenterOffset: -50
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
@@ -140,11 +139,9 @@ Rectangle {
         }
     }
 
-    Button {
+    SimButton {
         id: cancelRect
         objectName: "cancelRect"
-        width: 80
-        height: 30
         anchors.horizontalCenterOffset: 50
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
