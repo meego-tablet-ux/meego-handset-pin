@@ -22,6 +22,8 @@ PinApplication::PinApplication(int &argc, char **argv, int version) :
 {
     mSimIf = NULL;
     mSimProperties = NULL;
+	mPinTypeRequired = "none";
+	mPinRetries = 0;
     setQuitOnLastWindowClosed ( false );
 }
 
@@ -44,52 +46,71 @@ bool PinApplication::registerPinPropertyChanged(SimIf *simIf)
 
 void PinApplication::simPropertyChanged(const QString &property, const QDBusVariant &value)
 {
-    int Retries = 3;
-
     qDebug() << "simPropertyChanged: " << property << " variant string : " << value.variant().toString();
     if (mSimProperties != NULL)
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);
-    if (property == "Retries")
-    {
-        qDebug() << "Retries : " << value.variant().toByteArray();
-    }
-    if (property != "PinRequired" && property != "Retries")
+	qDebug() << "property : " << property;
+
+	// Getting which 'pin/puk...' code is requested
+	if (property == "PinRequired")
+	{
+		mPinTypeRequired = value.variant().toString();
+	}
+
+	// Getting remaining retries
+	if (property == "Retries")
+	{
+		QMap<QString, uchar> simRetryProperty;
+
+		simRetryProperty = mSimProperties->getRetryProperties();
+		mPinRetries = simRetryProperty[mPinTypeRequired];
+		qDebug() << "Retries=" << QString::number((int)mPinRetries);
+	}
+
+	// Check error / bad cases
+	if (mPinTypeRequired.isNull() || mPinRetries == 0)
+	{
+		qDebug() << "Exit!" << " mPinTypeRequired:" << mPinTypeRequired << " mPinRetries:" << mPinRetries;
         return;
-    else
-        if (value.variant().toString() == "none")
-            return;
+	}
+	else
+		if (property == "PinRequired" && value.variant().toString() == "none")
+		{
+			qDebug() << "Exit!" << " property == 'PinRequired':" << value.variant().toString();
+			return;
+		}
 
-    QDBusPendingReply<> enterPinCall;
-    {
-        // Getting "Retries" property
-        QMap<QString, uchar> simRetryProperty;
-        QString propName = "Retries";
 
-        simRetryProperty = mSimProperties->getRetryProperties();
-        SimDialog dlg(value.variant().toString() + "\n" + QString::number((int)Retries) + " retries", "qrc:/SimPassword.qml");
+	// Displaying 'pin/puk...' code dialog and send response to modem
+	QDBusPendingReply<> enterPinCall;
+	QString text;
+	if (mPinRetries > 1)
+		text = " remaining tries left";
+	else
+		text = " remaining try left";
+	SimDialog dlg(mPinTypeRequired + " code required!\n" + QString::number((int)mPinRetries) + text, "qrc:/SimPassword.qml");
 
-        dlg.setHideTyping(true);
-        dlg.initView();
-        dlg.exec();
+	dlg.setHideTyping(true);
+	dlg.initView();
+	dlg.exec();
 
-        AgentResponse ret = dlg.getAgentResponse();
-        switch (ret) {
-        case Ok:
-            qDebug() << "EnterPin: " << value.variant().toString() << " : " << dlg.getResponseData().toString();
-            enterPinCall = mSimIf->EnterPin(value.variant().toString(), dlg.getResponseData().toString());
-            enterPinCall.waitForFinished();
-            if (enterPinCall.isError())
-            {
+	AgentResponse ret = dlg.getAgentResponse();
+	switch (ret) {
+	case Ok:
+		qDebug() << "EnterPin: " << mPinTypeRequired << " : " << dlg.getResponseData().toString();
+		enterPinCall = mSimIf->EnterPin(mPinTypeRequired, dlg.getResponseData().toString());
+		enterPinCall.waitForFinished();
+		if (enterPinCall.isError())
+		{
 
-                QDBusError dbusError = enterPinCall.error();
-                qDebug() << "Bad Pin Code! Retries = " << Retries;
-            }
-            break;
-        case Cancel:
-            break;
-        default:
-            Q_ASSERT(false);
-        }
-    }
+			QDBusError dbusError = enterPinCall.error();
+			qDebug() << "Bad Pin Code!";
+		}
+		break;
+	case Cancel:
+		break;
+	default:
+		Q_ASSERT(false);
+	}
 }

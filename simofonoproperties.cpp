@@ -42,18 +42,11 @@ QMap<QString, uchar> SimOfonoProperties::getRetryProperties()
     QMap<QString, uchar> orp;
 
     QVariant variantRetry;
-    QDBusArgument::ElementType type;
-    QString signature;
 
     variantRetry = mProperties.value("Retries");
-    QDBusArgument arg = variantRetry.value<QDBusArgument>();
-    signature = arg.currentSignature();
-    type = arg.currentType();
-    qDebug() << "signature:" << signature << " type " << type;
+	QDBusArgument arg = variantRetry.value<QDBusArgument>();
 
     arg >> orp;
- //   orp << arg;
-    qDebug() << "orp:" << orp;
 
     return orp;
 }

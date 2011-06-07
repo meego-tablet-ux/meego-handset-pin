@@ -26,7 +26,6 @@ void SimDialog::initView()
     // Create QML View as central widget
     mView = new QDeclarativeView;
     // Register image provider, deleted with the engine
-    QDeclarativeEngine * engine = mView->engine();
     mView->setSource(QUrl(mQmlViewUrl));
     mView->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     QVBoxLayout *layout = new QVBoxLayout;
