@@ -26,8 +26,7 @@ SimOfonoProperties::SimOfonoProperties(SimIf *simIf, QObject *parent) :
         QDBusError error = simPropsCall.error();
         qDebug() << "Error:" << error.name() << ":" << error.message();
     }
-    else
-    {   // get properties map
+    else {   // get properties map
         mProperties = simPropsCall.value();
     }
 }
