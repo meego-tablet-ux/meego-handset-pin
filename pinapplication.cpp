@@ -50,7 +50,6 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
     if (mSimProperties != NULL)
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);
-    qDebug() << "property : " << property;
 
     // Getting which 'pin/puk...' code is requested
     if (property == "PinRequired") {
@@ -63,18 +62,22 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
 
         simRetryProperty = mSimProperties->getRetryProperties();
         mPinRetries = simRetryProperty[mPinTypeRequired];
-        qDebug() << "Retries=" << QString::number((int)mPinRetries);
+		qDebug() << "simPropertyChanged: Retries=" << QString::number((int)mPinRetries);
     }
 
     // Check error / bad cases
     if (mPinTypeRequired.isNull() || mPinRetries == 0) {
-        qDebug() << "Exit!" << " mPinTypeRequired:" << mPinTypeRequired << " mPinRetries:" << mPinRetries;
+		qDebug() << "simPropertyChanged: Exit!" << " mPinTypeRequired:" << mPinTypeRequired << " mPinRetries:" << mPinRetries;
         return;
     }
-    else if (property == "PinRequired" && value.variant().toString() == "none") {
-        qDebug() << "Exit!" << " property == 'PinRequired':" << value.variant().toString();
-        return;
-    }
+	else if (property == "PinRequired" && value.variant().toString() == "none") {
+		qDebug() << "simPropertyChanged: Exit!" << " property == 'PinRequired':" << value.variant().toString();
+		return;
+	}
+	if (property != "PinRequired" && property != "Retries") {
+		qDebug() << "simPropertyChanged: Exit!" << " property (" << property << ") is not 'PinRequired' nor Retries";
+		return;
+	}
 
     // Displaying 'pin/puk...' code dialog and send response to modem
     QDBusPendingReply<> enterPinCall;
@@ -97,7 +100,7 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
         enterPinCall.waitForFinished();
         if (enterPinCall.isError()) {
             QDBusError dbusError = enterPinCall.error();
-            qDebug() << "Bad Pin Code!";
+			qDebug() << "simPropertyChanged: Bad Pin Code!";
         }
         break;
     case Cancel:
