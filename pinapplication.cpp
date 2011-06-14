@@ -12,6 +12,7 @@
 
 #include "simdialog.h"
 #include "simdefines.h"
+#include "ofonoutils.h"
 
 
 #include "sim_32x32.xpm"
@@ -20,33 +21,146 @@
 PinApplication::PinApplication(int &argc, char **argv, int version) :
     QApplication(argc, argv, version)
 {
+    mMgrIf = NULL;
+    mModemIf = NULL;
     mSimIf = NULL;
     mSimProperties = NULL;
     mPinTypeRequired = "none";
     mPinRetries = 0;
-    setQuitOnLastWindowClosed ( false );
+    setQuitOnLastWindowClosed(false);
 }
 
 PinApplication::~PinApplication()
 {
-    if (mSimProperties != NULL)
-        delete mSimProperties;
-    // mSimIf is deleted from main.cpp
+    // disconnect, delete all interfaces
+    deleteInterfaces();
 }
 
-bool PinApplication::registerPinPropertyChanged(SimIf *simIf)
+void PinApplication::resetInterfaces()
 {
-    mSimIf = simIf;
+    // Disconnect all signals sent from oFono interfaces
+    if (mMgrIf != NULL) {
+        disconnect(mMgrIf, SIGNAL(ModemAdded(QDBusObjectPath, QVariantMap)), this, SLOT(mgrModemAdded(QDBusObjectPath, QVariantMap)));
+        disconnect(mMgrIf, SIGNAL(ModemRemoved(QDBusObjectPath)), this, SLOT(mgrModemRemoved(QDBusObjectPath)));
+    }
+    if (mModemIf != NULL)
+        disconnect(mModemIf, SIGNAL(PropertyChanged(QString, QDBusVariant)), this, SLOT(modemPropertyChanged(QString, QDBusVariant)));
+    if (mSimIf != NULL)
+        disconnect(mSimIf, SIGNAL(PropertyChanged(QString, QDBusVariant)), this, SLOT(simPropertyChanged(QString, QDBusVariant)));
+    // delete current SIM interface properties
     if (mSimProperties != NULL)
         delete mSimProperties;
-    mSimProperties = new SimOfonoProperties(mSimIf);
+    mSimProperties = NULL;
+    mModemIf = NULL; // delete with mModemIfs
+    mSimIf = NULL; // delete with mSimIfs
+}
+
+void PinApplication::deleteInterfaces()
+{
+    // disconnect from all oFono signals
+    resetInterfaces();
+    // delete all org.ofono.SimManager interfaces
+    while (!mSimIfs.isEmpty()) {
+        delete mSimIfs.first();
+        mSimIfs.removeFirst();
+    }
+    // delete all org.ofono.Modem interfaces
+    while (!mModemIfs.isEmpty()) {
+        delete mModemIfs.first();
+        mModemIfs.removeFirst();
+    }
+    // disconnected by resetInterfaces
+    if (mMgrIf != NULL) {
+        delete mMgrIf;
+        mMgrIf = NULL;
+    }
+}
+
+bool PinApplication::initOfonoConnection()
+{
+    // disconnect, delete all interfaces
+    deleteInterfaces();
+    // DBus Connection systemBus
+    QDBusConnection connection = QDBusConnection::systemBus();
+    if( !connection.isConnected() ) {
+        QDBusError dbusError = connection.lastError();
+        qDebug() << "Error:" << dbusError.name() << ":" << dbusError.message();
+        return false;
+    }
+    // Instanciate proxy for org.ofono.Manager interface
+    mMgrIf = new MgrIf("org.ofono","/",connection,NULL);
+    // find all modems
+    OfonoModemList modems = OfonoUtils::findModems(mMgrIf);
+    if (modems.isEmpty()) {
+        qDebug() << "No modem found, registering for modem add / removed";
+        registerModemMgrChanges();
+        return true;
+    }
+    // find org.ofono.Modem interfaces
+    mModemIfs = OfonoUtils::findModemInterfaces(connection, mMgrIf);
+    if (mModemIfs.isEmpty()) {
+        qDebug() << "No modem interface found, registering for modem add / removed";
+        registerModemMgrChanges();
+        return true;
+    }
+    // Use the first Modem available
+    mModemIf = mModemIfs.first();
+    // find org.ofono.SimManager interfaces for all modems
+    mSimIfs = OfonoUtils::findSimInterfaces(connection, mMgrIf);
+    if (mSimIfs.isEmpty()) {
+        qDebug() << "No SIM interface found, registering for Modem property changes";
+        registerModemPropertyChanged();
+        return true;
+    }
+    // Use the first SimManager available
+    mSimIf = mSimIfs.first();
+    // Register for simPropertyChanged
+    registerSimPropertyChanged();
+    return true;
+}
+
+bool PinApplication::registerModemMgrChanges()
+{
+    // Connect mgrIf modem added / removed signals
+    bool reg1 = connect(mMgrIf, SIGNAL(ModemAdded(QDBusObjectPath, QVariantMap)), this, SLOT(mgrModemAdded(QDBusObjectPath, QVariantMap)));
+    bool reg2 = connect(mMgrIf, SIGNAL(ModemRemoved(QDBusObjectPath)), this, SLOT(mgrModemRemoved(QDBusObjectPath)));
+    return reg1 && reg2;
+}
+
+bool PinApplication::registerModemPropertyChanged()
+{
+    // Connect simIf signals
+    return connect(mModemIf, SIGNAL(PropertyChanged(QString, QDBusVariant)), this, SLOT(modemPropertyChanged(QString, QDBusVariant)));
+}
+
+bool PinApplication::registerSimPropertyChanged()
+{
     // Connect simIf signals
     return connect(mSimIf, SIGNAL(PropertyChanged(QString, QDBusVariant)), this, SLOT(simPropertyChanged(QString, QDBusVariant)));
+}
+
+void PinApplication::mgrModemAdded(const QDBusObjectPath &in0, const QVariantMap &in1)
+{
+    qDebug() << "mgrModemAdded: " << in0.path() << " variant map: " << in1;
+    initOfonoConnection();
+}
+
+void PinApplication::mgrModemRemoved(const QDBusObjectPath &in0)
+{
+    qDebug() << "mgrModemRemoved: " << in0.path();
+    initOfonoConnection();
+}
+
+void PinApplication::modemPropertyChanged(const QString &property, const QDBusVariant &value)
+{
+    qDebug() << "modemPropertyChanged: " << property << " variant string : " << value.variant().toString();
+    initOfonoConnection();
 }
 
 void PinApplication::simPropertyChanged(const QString &property, const QDBusVariant &value)
 {
     qDebug() << "simPropertyChanged: " << property << " variant string : " << value.variant().toString();
+    // Update current SIM interface properties
     if (mSimProperties != NULL)
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);

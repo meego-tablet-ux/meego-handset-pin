@@ -13,12 +13,14 @@
 
 #include <QDBusConnection>
 #include "mgrif.h"
+#include "modemif.h"
 #include "simif.h"
 
 class OfonoUtils
 {
 public:
     static OfonoModemList findModems(MgrIf *mgrIf);
+    static QList<ModemIf*> findModemInterfaces(const QDBusConnection &connection, MgrIf *mgrIf);
     static QList<SimIf*> findSimInterfaces(const QDBusConnection &connection, MgrIf *mgrIf);
 };
 
