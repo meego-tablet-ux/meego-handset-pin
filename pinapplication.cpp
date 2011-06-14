@@ -27,6 +27,7 @@ PinApplication::PinApplication(int &argc, char **argv, int version) :
     mSimProperties = NULL;
     mPinTypeRequired = "none";
     mPinRetries = 0;
+    mDialogOpen = false;
     setQuitOnLastWindowClosed(false);
 }
 
@@ -165,6 +166,12 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);
 
+    // First check if we are interested in the property changed
+    if (property != "PinRequired" && property != "Retries") {
+        qDebug() << "simPropertyChanged: Exit!" << " property (" << property << ") is not 'PinRequired' nor Retries";
+        return;
+    }
+
     // Getting which 'pin/puk...' code is requested
     if (property == "PinRequired") {
         mPinTypeRequired = value.variant().toString();
@@ -173,25 +180,22 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
     // Getting remaining retries
     if (property == "Retries") {
         QMap<QString, uchar> simRetryProperty;
-
         simRetryProperty = mSimProperties->getRetryProperties();
         mPinRetries = simRetryProperty[mPinTypeRequired];
 		qDebug() << "simPropertyChanged: Retries=" << QString::number((int)mPinRetries);
     }
 
     // Check error / bad cases
-    if (mPinTypeRequired.isNull() || mPinRetries == 0) {
+    if (mPinTypeRequired.isEmpty() || mPinTypeRequired == "none" || mPinRetries == 0) {
 		qDebug() << "simPropertyChanged: Exit!" << " mPinTypeRequired:" << mPinTypeRequired << " mPinRetries:" << mPinRetries;
         return;
     }
-	else if (property == "PinRequired" && value.variant().toString() == "none") {
-		qDebug() << "simPropertyChanged: Exit!" << " property == 'PinRequired':" << value.variant().toString();
-		return;
-	}
-	if (property != "PinRequired" && property != "Retries") {
-		qDebug() << "simPropertyChanged: Exit!" << " property (" << property << ") is not 'PinRequired' nor Retries";
-		return;
-	}
+
+    if (mDialogOpen) {
+        qDebug() << "simPropertyChanged: Dialog already open!" << " mPinTypeRequired:" << mPinTypeRequired << " mPinRetries:" << mPinRetries;
+        return;
+    }
+    mDialogOpen = true;
 
     // Displaying 'pin/puk...' code dialog and send response to modem
     QDBusPendingReply<> enterPinCall;
@@ -222,4 +226,6 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
     default:
         Q_ASSERT(false);
     }
+
+    mDialogOpen = false;
 }

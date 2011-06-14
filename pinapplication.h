@@ -41,6 +41,7 @@ private:
     // current pin required status
 	QString	mPinTypeRequired;
 	int		mPinRetries;
+    bool    mDialogOpen;
 
     // methods
     void resetInterfaces();
