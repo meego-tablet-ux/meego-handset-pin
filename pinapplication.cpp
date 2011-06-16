@@ -7,6 +7,8 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+#include <QIcon>
+#include <QPixmap>
 
 #include "pinapplication.h"
 
@@ -29,6 +31,7 @@ PinApplication::PinApplication(int &argc, char **argv, int version) :
     mPinRetries = 0;
     mDialogOpen = false;
     setQuitOnLastWindowClosed(false);
+    setWindowIcon(QIcon(QPixmap(sim_32x32_xpm)));
 }
 
 PinApplication::~PinApplication()
