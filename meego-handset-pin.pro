@@ -9,7 +9,7 @@ CONFIG += qdbus
 
 TARGET = pinpuk
 TEMPLATE = app
-target.path=/usr/local/bin
+target.path=/usr/bin
 INSTALLS=target
 
 
@@ -70,4 +70,3 @@ dist.commands += tar jcpf $${PROJECT_NAME}-$${VERSION}.tar.bz2 $${PROJECT_NAME}-
 dist.commands += rm -fR $${PROJECT_NAME}-$${VERSION} &&
 dist.commands += echo; echo Created $${PROJECT_NAME}-$${VERSION}.tar.bz2
 QMAKE_EXTRA_TARGETS += dist
-
