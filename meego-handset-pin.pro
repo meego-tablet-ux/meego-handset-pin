@@ -45,13 +45,13 @@ RESOURCES += \
 
 # ---- Installation
 
-desktop.files += *.desktop
-desktop.path += $$INSTALL_ROOT/usr/share/applications
+autostart.files += *.desktop
+autostart.path += $$INSTALL_ROOT/etc/xdg/autostart
 
 pixmaps.files += *.xpm *.png
 pixmaps.path += $$INSTALL_ROOT/usr/share/pixmaps
 
-INSTALLS += pixmaps desktop
+INSTALLS += pixmaps autostart
 
 
 # ---- Distribution
