@@ -1,0 +1,35 @@
+====== meego-handset-pin - Pin / Puk ======
+
+Copyright (C) 2011  Intel Corporation. All rights reserved.
+
+
+This is the meego-handset-pin management application (pinpuk) 
+
+===== Compilation =====
+
+In order to build pinpuk you need the following modules:
+
+  * QtDeclarative
+  * QtCore
+  * QtGui
+  * QtDBus
+
+From meego-handset-pin root directory, execute the following commands:
+
+  qmake
+  make
+
+===== Installing =====
+
+Execute the compilation commands above, then:
+
+  sudo make install
+
+===== Distribution =====
+
+From meego-handset-pin root directory, execute the following commands:
+
+  qmake
+  make dist
+
+

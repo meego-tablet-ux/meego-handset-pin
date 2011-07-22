@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Pin / Puk management
+Exec=pinpuk
+Terminal=false
+Icon=sim_32x32
+X-Meego-Priority=Highest
+X-MeeGo-Watchdog=Restart
