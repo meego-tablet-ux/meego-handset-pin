@@ -31,12 +31,12 @@ SimOfonoProperties::SimOfonoProperties(SimIf *simIf, QObject *parent) :
     }
 }
 
-QVariant SimOfonoProperties::getPropertyValue(QString &propertyName)
+QVariant SimOfonoProperties::getPropertyValue(const QString &propertyName)
 {
       return mProperties.value(propertyName);
 }
 
-QMap<QString, uchar> SimOfonoProperties::getRetryProperties()
+QMap<QString, uchar> SimOfonoProperties::getRetries()
 {
     QMap<QString, uchar> orp;
 

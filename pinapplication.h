@@ -38,9 +38,7 @@ private:
     QList<SimIf*> mSimIfs;
     // current SIM interface properties
     SimOfonoProperties *mSimProperties;
-    // current pin required status
-	QString	mPinTypeRequired;
-	int		mPinRetries;
+    // current dialog status
     bool    mDialogOpen;
 
     // methods

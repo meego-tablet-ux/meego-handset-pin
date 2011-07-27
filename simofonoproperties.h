@@ -21,8 +21,9 @@ class SimOfonoProperties : public QObject
     Q_OBJECT
 public:
     explicit SimOfonoProperties(SimIf *simIf, QObject *parent = 0);
-    QVariant getPropertyValue(QString &propertyName);
-    QMap<QString, uchar> getRetryProperties();
+    QVariant getPropertyValue(const QString &propertyName);
+    QMap<QString, uchar> getRetries();
+    QString getPinRequired();
 signals:
 
 private:

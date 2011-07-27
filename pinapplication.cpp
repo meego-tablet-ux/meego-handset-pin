@@ -27,8 +27,6 @@ PinApplication::PinApplication(int &argc, char **argv, int version) :
     mModemIf = NULL;
     mSimIf = NULL;
     mSimProperties = NULL;
-    mPinTypeRequired = "none";
-    mPinRetries = 0;
     mDialogOpen = false;
     setQuitOnLastWindowClosed(false);
     setWindowIcon(QIcon(QPixmap(sim_32x32_xpm)));
@@ -164,64 +162,56 @@ void PinApplication::modemPropertyChanged(const QString &property, const QDBusVa
 void PinApplication::simPropertyChanged(const QString &property, const QDBusVariant &value)
 {
     qDebug() << "simPropertyChanged: " << property << " variant string : " << value.variant().toString();
+
+    // First check if we are interested in the property changed
+    if (property != "PinRequired" && property != "Retries") {
+        qDebug() << "simPropertyChanged: Exit!" << " property (" << property << ") is not 'PinRequired' nor 'Retries'";
+        return;
+    }
+
     // Update current SIM interface properties
     if (mSimProperties != NULL)
         delete mSimProperties;
     mSimProperties = new SimOfonoProperties(mSimIf);
 
-    // First check if we are interested in the property changed
-    if (property != "PinRequired" && property != "Retries") {
-        qDebug() << "simPropertyChanged: Exit!" << " property (" << property << ") is not 'PinRequired' nor Retries";
-        return;
-    }
-
-    // Getting which 'pin/puk...' code is requested
-    if (property == "PinRequired") {
-        mPinTypeRequired = value.variant().toString();
-    }
-
-    // Getting remaining retries
-    if (property == "Retries") {
-        QMap<QString, uchar> simRetryProperty;
-        simRetryProperty = mSimProperties->getRetryProperties();
-        mPinRetries = simRetryProperty[mPinTypeRequired];
-		qDebug() << "simPropertyChanged: Retries=" << QString::number((int)mPinRetries);
-    }
+    // Get the property values we are interested in
+    QString pinRequired = mSimProperties->getPropertyValue("PinRequired").toString();
+    QMap<QString, uchar> retries = mSimProperties->getRetries();
+    int pinRetries = retries[pinRequired];
 
     // Check error / bad cases
-    if (mPinTypeRequired.isEmpty() || mPinTypeRequired == "none" || mPinRetries == 0) {
-		qDebug() << "simPropertyChanged: Exit!" << " mPinTypeRequired:" << mPinTypeRequired << " mPinRetries:" << mPinRetries;
+    if (pinRequired.isEmpty() || pinRequired == "none") {
+        qDebug() << "simPropertyChanged: Exit!" << " pinRequired:" << pinRequired << " pinRetries:" << pinRetries;
         return;
     }
-
     if (mDialogOpen) {
-        qDebug() << "simPropertyChanged: Dialog already open!" << " mPinTypeRequired:" << mPinTypeRequired << " mPinRetries:" << mPinRetries;
+        qDebug() << "simPropertyChanged: Exit! (Dialog already open)" << " pinRequired:" << pinRequired << " pinRetries:" << pinRetries;
         return;
     }
     mDialogOpen = true;
 
     // Displaying 'pin/puk...' code dialog and send response to modem
-    QDBusPendingReply<> enterPinCall;
     QString text;
-    if (mPinRetries > 1)
+    if (pinRetries > 1)
         text = " remaining tries left";
     else
         text = " remaining try left";
-    SimDialog dlg(mPinTypeRequired + " code required!\n" + QString::number((int)mPinRetries) + text, "qrc:/SimPassword.qml");
+    SimDialog dlg(pinRequired + " code required!\n" + QString::number((int)pinRetries) + text, "qrc:/SimPassword.qml");
 
     dlg.setHideTyping(true);
     dlg.initView();
     dlg.exec();
 
+    QDBusPendingReply<> enterPinCall;
     AgentResponse ret = dlg.getAgentResponse();
     switch (ret) {
     case Ok:
-        qDebug() << "EnterPin: " << mPinTypeRequired << " : " << dlg.getResponseData().toString();
-        enterPinCall = mSimIf->EnterPin(mPinTypeRequired, dlg.getResponseData().toString());
+        qDebug() << "EnterPin: " << pinRequired << " : " << dlg.getResponseData().toString();
+        enterPinCall = mSimIf->EnterPin(pinRequired, dlg.getResponseData().toString());
         enterPinCall.waitForFinished();
         if (enterPinCall.isError()) {
             QDBusError dbusError = enterPinCall.error();
-			qDebug() << "simPropertyChanged: Bad Pin Code!";
+            qDebug() << "simPropertyChanged: EnterPin error: " << dbusError.name() << ":" << dbusError.message();
         }
         break;
     case Cancel:
