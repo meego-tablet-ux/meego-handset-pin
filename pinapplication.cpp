@@ -191,12 +191,10 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
     mDialogOpen = true;
 
     // Displaying 'pin/puk...' code dialog and send response to modem
-    QString text;
-    if (pinRetries > 1)
-        text = " remaining tries left";
-    else
-        text = " remaining try left";
-    SimDialog dlg(pinRequired + " code required!\n" + QString::number((int)pinRetries) + text, "qrc:/SimPassword.qml");
+    QString text = tr("Enter code ") + pinRequired;
+    if (pinRetries)
+        text += " (" + QString::number((int)pinRetries) + tr(" left") + ")";
+    SimDialog dlg(text, "qrc:/SimPassword.qml");
 
     dlg.setHideTyping(true);
     dlg.initView();

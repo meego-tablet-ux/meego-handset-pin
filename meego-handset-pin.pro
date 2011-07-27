@@ -56,7 +56,7 @@ INSTALLS += pixmaps autostart
 
 # ---- Distribution
 
-TRANSLATIONS += *.qml
+TRANSLATIONS += *.qml *.h *.cpp
 
 PROJECT_NAME = meego-handset-pin
 
