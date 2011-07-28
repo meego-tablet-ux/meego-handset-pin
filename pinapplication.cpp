@@ -118,6 +118,14 @@ bool PinApplication::initOfonoConnection()
     mSimIf = mSimIfs.first();
     // Register for simPropertyChanged
     registerSimPropertyChanged();
+
+    // Read initial value for SIM interface properties
+    mSimProperties = new SimOfonoProperties(mSimIf);
+    // Check if a pin code is already required
+    QString pinRequired = mSimProperties->getPropertyValue("PinRequired").toString();
+    if (!pinRequired.isEmpty() && pinRequired != "none")
+        openDialog();
+
     return true;
 }
 
