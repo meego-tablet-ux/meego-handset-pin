@@ -176,18 +176,28 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
 
     // Get the property values we are interested in
     QString pinRequired = mSimProperties->getPropertyValue("PinRequired").toString();
-    QMap<QString, uchar> retries = mSimProperties->getRetries();
-    int pinRetries = retries[pinRequired];
 
     // Check error / bad cases
     if (pinRequired.isEmpty() || pinRequired == "none") {
-        qDebug() << "simPropertyChanged: Exit!" << " pinRequired:" << pinRequired << " pinRetries:" << pinRetries;
+        qDebug() << "simPropertyChanged: Exit!" << " pinRequired:" << pinRequired;
         return;
     }
     if (mDialogOpen) {
-        qDebug() << "simPropertyChanged: Exit! (Dialog already open)" << " pinRequired:" << pinRequired << " pinRetries:" << pinRetries;
+        qDebug() << "simPropertyChanged: Exit! (Dialog already open)";
         return;
     }
+
+    // Open dialog
+    openDialog();
+}
+
+void PinApplication::openDialog()
+{
+    // Get the property values we are interested in
+    QString pinRequired = mSimProperties->getPropertyValue("PinRequired").toString();
+    QMap<QString, uchar> retries = mSimProperties->getRetries();
+    int pinRetries = retries[pinRequired];
+
     mDialogOpen = true;
 
     // Displaying 'pin/puk...' code dialog and send response to modem
@@ -209,7 +219,7 @@ void PinApplication::simPropertyChanged(const QString &property, const QDBusVari
         enterPinCall.waitForFinished();
         if (enterPinCall.isError()) {
             QDBusError dbusError = enterPinCall.error();
-            qDebug() << "simPropertyChanged: EnterPin error: " << dbusError.name() << ":" << dbusError.message();
+            qDebug() << "simPropertyChanged: EnterPin error " << dbusError.type() << " : " << dbusError.name() << ":" << dbusError.message();
         }
         break;
     case Cancel:

@@ -42,6 +42,8 @@ private:
     bool    mDialogOpen;
 
     // methods
+    void openDialog();
+
     void resetInterfaces();
     void deleteInterfaces();
 
