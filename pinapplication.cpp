@@ -206,27 +206,32 @@ void PinApplication::openDialog()
         text += " (" + QString::number((int)pinRetries) + tr(" left") + ")";
     SimDialog dlg(text, "qrc:/SimPassword.qml");
 
+    QDBusError dbusError;
+    QDBusPendingReply<> enterPinCall;
+    AgentResponse ret;
+
     dlg.setHideTyping(true);
     dlg.initView();
-    dlg.exec();
 
-    QDBusPendingReply<> enterPinCall;
-    AgentResponse ret = dlg.getAgentResponse();
-    switch (ret) {
-    case Ok:
-        qDebug() << "EnterPin: " << pinRequired << " : " << dlg.getResponseData().toString();
-        enterPinCall = mSimIf->EnterPin(pinRequired, dlg.getResponseData().toString());
-        enterPinCall.waitForFinished();
-        if (enterPinCall.isError()) {
-            QDBusError dbusError = enterPinCall.error();
-            qDebug() << "simPropertyChanged: EnterPin error " << dbusError.type() << " : " << dbusError.name() << ":" << dbusError.message();
+    do {
+        dlg.exec();
+        ret = dlg.getAgentResponse();
+        switch (ret) {
+        case Ok:
+            qDebug() << "EnterPin: " << pinRequired << " : " << dlg.getResponseData().toString();
+            enterPinCall = mSimIf->EnterPin(pinRequired, dlg.getResponseData().toString());
+            enterPinCall.waitForFinished();
+            if (enterPinCall.isError()) {
+                dbusError = enterPinCall.error();
+                qDebug() << "simPropertyChanged: EnterPin error " << dbusError.type() << " : " << dbusError.name() << ":" << dbusError.message();
+            }
+            break;
+        case Cancel:
+            break;
+        default:
+            Q_ASSERT(false);
         }
-        break;
-    case Cancel:
-        break;
-    default:
-        Q_ASSERT(false);
-    }
+    } while(ret==Ok && dbusError.name() == "org.ofono.Error.InvalidFormat");
 
     mDialogOpen = false;
 }
